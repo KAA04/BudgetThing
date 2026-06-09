@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Budget Lists{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <!-- <p class="eyebrow">Simple budgeting</p> -->
+          <h1><a href="{{ url_for('home') }}">Budget Lists</a></h1>
+        </div>
+      </header>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <section class="messages">
+            {% for category, message in messages %}
+              <div class="message message-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </section>
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>
+
+<script>
+function toggleEditForm(id) {
+  document.getElementById(`edit-form-${id}`).classList.toggle('hidden');
+}
+
+function toggleAddForm(id) {
+  document.getElementById(`add-form-${id}`).classList.toggle('hidden');
+}
+</script>

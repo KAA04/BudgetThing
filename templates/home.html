@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}Reminders{% endblock %}
+
+{% block content %}
+  <section class="page-head">
+    <div>
+      <!-- <h2>Budget Lists</h2> -->
+    </div>
+  </section>
+
+  <details class="card form-card new-list-toggle">
+    <summary class="new-list-summary">
+      <span class="new-list-plus">+</span>
+      <span>New List</span>
+    </summary>
+
+    <form class="form new-list-form" method="post">
+      <input type="hidden" name="action" value="create_category">
+      <label>
+        <input type="text" name="name" placeholder="List Name" autocomplete="off" required>
+      </label>
+
+      <label>
+        <input type="number" name="budget" placeholder="Budget" min="0" step="0.01" required>
+      </label>
+
+      <div class="actions">
+        <button class="button button-primary" type="submit">Save List</button>
+      </div>
+    </form>
+  </details>
+
+  {% if categories %}
+    <section class="stack">
+      {% for category in categories %}
+        <details class="card category-card{% if category.utilization >= 0.9 %} danger{% elif category.utilization >= 0.5 %} warning{% else %} safe{% endif %}"{% if category.id == open_category %} open{% endif %}>
+          <summary class="category-summary">
+            <div class="category-summary-content">
+              <div class="category-summary-text">
+                <span class="category-name">{{ category.name }}</span>
+                <span class="category-amount">
+                  ${{ '%.2f'|format(category.spent) }} / ${{ '%.2f'|format(category.budget) }}
+                </span>
+              </div>
+              <div class="category-actions-inline">
+                <!-- <span class="button button-secondary category-action-button">Edit</span>
+                <span class="button button-secondary category-action-button">Delete</span> -->
+              </div>
+            </div>
+          </summary>
+
+          <div class="category-body">
+            <div class="category-actions-stack">
+
+                <!-- TOP ACTION ROW -->
+                <div class="category-actions-row">
+                    <button type="button"
+                            class="button button-secondary"
+                            data-id="{{ category.id }}"
+                            onclick="toggleAddForm(this.dataset.id)">
+                    Add Item
+                    </button>
+
+                    <button type="button"
+                            class="button button-secondary"
+                            data-id="{{ category.id }}"
+                            onclick="toggleEditForm(this.dataset.id)">
+                    Edit
+                    </button>
+
+                    <form class="delete-form" method="post">
+                    <input type="hidden" name="action" value="delete_category">
+                    <input type="hidden" name="category_id" value="{{ category.id }}">
+                    <button class="button button-secondary delete-button" type="submit">
+                    Delete
+                    </button>
+                    </form>
+
+                </div>
+
+
+                <!-- EDIT FORM (hidden) -->
+                <form class="form category-edit-form hidden"
+                        id="edit-form-{{ category.id }}"
+                        method="post">
+
+                    <input type="hidden" name="action" value="update_category">
+                    <input type="hidden" name="category_id" value="{{ category.id }}">
+
+                    <label>
+                    <input type="text"
+                            name="name"
+                            value="{{ category.name }}"
+                            required>
+                    </label>
+
+                    <label>
+                    <input type="number"
+                            name="budget"
+                            value="{{ '%.2f'|format(category.budget) }}"
+                            min="0"
+                            step="0.01"
+                            required>
+                    </label>
+
+                    <div class="actions">
+                    <button class="button button-primary" type="submit">
+                        Save Changes
+                    </button>
+                    </div>
+
+                </form>
+
+
+                <!-- ADD ITEM FORM (hidden) -->
+                <form class="form inline-form hidden"
+                        id="add-form-{{ category.id }}"
+                        method="post">
+
+                    <input type="hidden" name="action" value="add_item">
+                    <input type="hidden" name="category_id" value="{{ category.id }}">
+
+                    <label>
+                    <input type="text"
+                            name="title"
+                            placeholder="Item Name"
+                            autocomplete="off"
+                            required>
+                    </label>
+
+                    <label>
+                    <input type="number"
+                            name="price"
+                            placeholder="Cost"
+                            min="0"
+                            step="0.01"
+                            required>
+                    </label>
+
+                    <div class="actions">
+                    <button class="button button-primary" type="submit">
+                        Add Item
+                    </button>
+                    </div>
+
+                </form>
+
+                </div>
+
+            {% if category["items"] %}
+              <div class="item-list">
+                {% for item in category["items"] %}
+                  <div class="item-list-row">
+                    <span class="item-name">{{ item.name }}</span>
+                    <span class="item-price">${{ '%.2f'|format(item.price) }}</span>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="muted empty-inline">No items in this list yet.</p>
+            {% endif %}
+          </div>
+        </details>
+      {% endfor %}
+    </section>
+  {% else %}
+    <section class="card empty-state">
+      <h3>No lists yet</h3>
+      <p>Add a list with a budget to start tracking spending.</p>
+    </section>
+  {% endif %}
+
+  <form class="reset-form" method="post">
+    <input type="hidden" name="action" value="reset_items">
+    <button class="button button-secondary reset-button" type="submit">Reset</button>
+  </form>
+{% endblock %}
