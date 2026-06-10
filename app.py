@@ -13,7 +13,6 @@ def create_app() -> Flask:
 
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
 
-    # 🔥 Supabase connection
     SUPABASE_URL = os.environ.get("SUPABASE_URL")
     SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
@@ -22,16 +21,12 @@ def create_app() -> Flask:
 
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-    # -------------------------
-    # HOME ROUTE
-    # -------------------------
     @app.route("/", methods=["GET", "POST"])
     def home():
 
         if request.method == "POST":
             action = request.form.get("action", "")
 
-            # ---------------- CREATE CATEGORY ----------------
             if action == "create_category":
                 name = request.form.get("name", "").strip()
                 budget_text = request.form.get("budget", "").strip()
@@ -54,7 +49,6 @@ def create_app() -> Flask:
                 flash("List created.", "success")
                 return redirect(url_for("home"))
 
-            # ---------------- ADD ITEM ----------------
             if action == "add_item":
                 category_id = request.form.get("category_id", "").strip()
                 title = request.form.get("title", "").strip()
@@ -83,7 +77,6 @@ def create_app() -> Flask:
                 flash("Item added.", "success")
                 return redirect(url_for("home", open_category=category_id))
 
-            # ---------------- UPDATE CATEGORY ----------------
             if action == "update_category":
                 category_id = request.form.get("category_id", "").strip()
                 name = request.form.get("name", "").strip()
@@ -99,19 +92,14 @@ def create_app() -> Flask:
                     flash("Budget must be a number.", "error")
                     return redirect(url_for("home"))
 
-                res = supabase.table("categories") \
+                supabase.table("categories") \
                     .update({"name": name, "budget": budget}) \
                     .eq("id", int(category_id)) \
                     .execute()
 
-                if not res.data:
-                    flash("List not found.", "error")
-                else:
-                    flash("List updated.", "success")
-
+                flash("List updated.", "success")
                 return redirect(url_for("home", open_category=category_id))
 
-            # ---------------- DELETE CATEGORY ----------------
             if action == "delete_category":
                 category_id = request.form.get("category_id", "").strip()
 
@@ -127,7 +115,6 @@ def create_app() -> Flask:
                 flash("List deleted.", "success")
                 return redirect(url_for("home"))
 
-            # ---------------- RESET ITEMS ----------------
             if action == "reset_items":
                 supabase.table("items").delete().neq("id", 0).execute()
                 flash("All items cleared.", "success")
@@ -143,7 +130,6 @@ def create_app() -> Flask:
         categories = categories_res.data or []
         items = items_res.data or []
 
-        # ---------------- GROUP ITEMS ----------------
         items_by_category = {}
         spent_by_category = {}
 
@@ -152,11 +138,17 @@ def create_app() -> Flask:
             items_by_category.setdefault(cid, []).append(item)
             spent_by_category[cid] = spent_by_category.get(cid, 0) + float(item["price"] or 0)
 
-        # ---------------- BUILD RESPONSE ----------------
         enriched = []
+        total_spent = 0
+        total_budget = 0
+        total_remaining = total_budget - total_spent
+
         for c in categories:
             spent = spent_by_category.get(c["id"], 0)
             budget = float(c.get("budget") or 0)
+
+            total_spent += spent
+            total_budget += budget
 
             enriched.append({
                 "id": c["id"],
@@ -174,7 +166,10 @@ def create_app() -> Flask:
         return render_template(
             "home.html",
             categories=enriched,
-            open_category=open_category
+            open_category=open_category,
+            total_spent=total_spent,
+            total_budget=total_budget,
+            total_remaining=total_remaining
         )
 
     return app
