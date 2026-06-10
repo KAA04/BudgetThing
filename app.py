@@ -46,7 +46,7 @@ def create_app() -> Flask:
                     "budget": budget
                 }).execute()
 
-                flash("List created.", "success")
+                # flash("List created.", "success")
                 return redirect(url_for("home"))
 
             if action == "add_item":
@@ -74,7 +74,7 @@ def create_app() -> Flask:
                     "price": price
                 }).execute()
 
-                flash("Item added.", "success")
+                # flash("Item added.", "success")
                 return redirect(url_for("home", open_category=category_id))
 
             if action == "update_category":
@@ -97,7 +97,7 @@ def create_app() -> Flask:
                     .eq("id", int(category_id)) \
                     .execute()
 
-                flash("List updated.", "success")
+                # flash("List updated.", "success")
                 return redirect(url_for("home", open_category=category_id))
 
             if action == "delete_category":
@@ -112,12 +112,12 @@ def create_app() -> Flask:
                     .eq("id", int(category_id)) \
                     .execute()
 
-                flash("List deleted.", "success")
+                # flash("List deleted.", "success")
                 return redirect(url_for("home"))
 
             if action == "reset_items":
                 supabase.table("items").delete().neq("id", 0).execute()
-                flash("All items cleared.", "success")
+                # flash("All items cleared.", "success")
                 return redirect(url_for("home"))
 
             flash("Unknown action.", "error")
