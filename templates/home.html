@@ -20,7 +20,9 @@
   <!-- BUDGET OVERVIEW -->
   <section class="page-head budget-overview">
 
-    <div class="budget-circle-wrapper">
+    <div class="budget-circle-wrapper" id="budget-circle-wrapper"
+         data-total-budget="{{ total_budget }}"
+         data-total-spent="{{ total_spent }}">
 
       <svg class="budget-circle" viewBox="0 0 120 120">
         {% set radius = 54 %}
@@ -41,6 +43,8 @@
         <div class="percent">{{ '%.0f'|format(clamped_percent) }}%</div>
         <div class="label">Spent</div>
       </div>
+
+      <div class="color-key hidden" id="budget-color-key" aria-hidden="true"></div>
 
     </div>
 
@@ -227,4 +231,123 @@
     <button class="reset-btn" type="submit">Reset</button>
   </form>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+const categories = {{ categories|tojson }};
+const totalBudget = {{ total_budget|tojson }};
+const totalSpent = {{ total_spent|tojson }};
+const palette = ['#FFB74D','#4DB6AC','#9575CD','#F06292','#81D4FA','#A1887F','#E57373','#90A4AE'];
+
+(function(){
+  const wrapper = document.getElementById('budget-circle-wrapper');
+  if (!wrapper) return;
+  const svg = wrapper.querySelector('.budget-circle');
+  const key = document.getElementById('budget-color-key');
+
+  function clearSegments(){
+    svg.querySelectorAll('.segment, .segment-cap').forEach(n=>n.remove());
+  }
+
+  function renderSegments(){
+    clearSegments();
+    const radius = 54;
+    const circumference = 2 * Math.PI * radius;
+    const tb = parseFloat(wrapper.dataset.totalBudget) || 0;
+    const ts = parseFloat(wrapper.dataset.totalSpent) || 0;
+    if (!tb || !ts) return;
+    let cum = 0;
+    // helper: create arc path from startAngle to endAngle (radians)
+    function arcPath(cx, cy, r, startAngle, endAngle) {
+      const startX = cx + r * Math.cos(startAngle);
+      const startY = cy + r * Math.sin(startAngle);
+      const endX = cx + r * Math.cos(endAngle);
+      const endY = cy + r * Math.sin(endAngle);
+      const largeArc = (endAngle - startAngle) % (2*Math.PI);
+      const useLarge = Math.abs(endAngle - startAngle) > Math.PI ? 1 : 0;
+      return `M ${startX} ${startY} A ${r} ${r} 0 ${useLarge} 1 ${endX} ${endY}`;
+    }
+
+    const gapFraction = 0.008; // fractional gap between segments
+    categories.forEach((cat,i)=>{
+      const spent = Number(cat.spent) || 0;
+      if (spent <= 0) return;
+      const segFraction = spent / tb;
+      const startFrac = cum;
+      const endFrac = cum + segFraction;
+      // apply small inward gap on both sides to create visual separation
+      // determine whether neighbors exist (non-zero spent)
+      const prevExists = (()=>{ for (let j=i-1;j>=0;j--) if (Number(categories[j].spent) > 0) return true; return false; })();
+      const nextExists = (()=>{ for (let j=i+1;j<categories.length;j++) if (Number(categories[j].spent) > 0) return true; return false; })();
+      // compute angles in the SVG's native coordinate system
+      // the SVG is rotated via CSS (-90deg), so using frac*2PI aligns with the visible start
+      const startAngle = startFrac * 2 * Math.PI;
+      const endAngle = endFrac * 2 * Math.PI;
+      const rInset = radius; // use same radius as the original progress circle so arcs line up
+
+      // create path arc
+      const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d', arcPath(60,60, rInset, startAngle, endAngle));
+      path.setAttribute('stroke', palette[i % palette.length]);
+      path.setAttribute('class', 'segment');
+      svg.appendChild(path);
+
+      // draw caps if this segment has an exposed start or end (no neighbor on that side)
+      const capRadius = 6; // equals half the stroke width (stroke 12)
+      if (!prevExists) {
+        const sx = 60 + rInset * Math.cos(startAngle);
+        const sy = 60 + rInset * Math.sin(startAngle);
+        const cap = document.createElementNS('http://www.w3.org/2000/svg','circle');
+        cap.setAttribute('cx', sx);
+        cap.setAttribute('cy', sy);
+        cap.setAttribute('r', capRadius);
+        cap.setAttribute('fill', palette[i % palette.length]);
+        cap.setAttribute('class', 'segment-cap');
+        svg.appendChild(cap);
+      }
+      if (!nextExists) {
+        const ex = 60 + rInset * Math.cos(endAngle);
+        const ey = 60 + rInset * Math.sin(endAngle);
+        const cap = document.createElementNS('http://www.w3.org/2000/svg','circle');
+        cap.setAttribute('cx', ex);
+        cap.setAttribute('cy', ey);
+        cap.setAttribute('r', capRadius);
+        cap.setAttribute('fill', palette[i % palette.length]);
+        cap.setAttribute('class', 'segment-cap');
+        svg.appendChild(cap);
+      }
+
+      cum += segFraction;
+    });
+    // build key
+    if (!key) return;
+    key.innerHTML = '';
+    categories.forEach((cat,i)=>{
+      const spent = Number(cat.spent) || 0;
+      if (spent <= 0) return;
+      const item = document.createElement('div');
+      item.className = 'key-item';
+      item.innerHTML = '<span class="key-swatch" style="background:' + palette[i % palette.length] + '"></span>' +
+                       '<span class="key-label">' + cat.name + '</span>' +
+                       '<span class="key-amount">$' + spent.toFixed(2) + '</span>';
+      key.appendChild(item);
+    });
+  }
+
+  svg.addEventListener('click', function(e){
+    wrapper.classList.toggle('segmented-mode');
+    if (wrapper.classList.contains('segmented-mode')){
+      renderSegments();
+      if (key) { key.classList.remove('hidden'); key.setAttribute('aria-hidden','false'); }
+      const prog = wrapper.querySelector('.circle-progress'); if (prog) prog.classList.add('hidden');
+    } else {
+      clearSegments();
+      if (key) { key.classList.add('hidden'); key.setAttribute('aria-hidden','true'); }
+      const prog = wrapper.querySelector('.circle-progress'); if (prog) prog.classList.remove('hidden');
+    }
+  });
+
+})();
+</script>
 {% endblock %}
