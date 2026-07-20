@@ -317,12 +317,13 @@ button[type="submit"]:hover {
 .color-key {
   position: absolute;
   top: 50%;
-  right: -200px;
+  right: -170px; /* moved closer to the circle */
   transform: translateY(-50%);
-  min-width: 200px;
+  min-width: 0;
+  width: auto; /* size to contents (swatch + label) */
   background: linear-gradient(180deg, rgba(7,10,13,0.6), rgba(10,12,15,0.6));
   border: 1px solid rgba(255,255,255,0.04);
-  padding: 12px 14px;
+  padding: 12px 12px;
   border-radius: 12px;
   box-shadow: 0 8px 30px rgba(2,6,12,0.7);
   text-align: left;
@@ -336,6 +337,8 @@ button[type="submit"]:hover {
   gap: 10px;
   margin-bottom: 10px;
   font-size: 14px;
+  position: relative; /* allow absolute-positioning the amount so it doesn't affect width */
+  padding-right: 46px; /* reserve space visually for amount without expanding box */
 }
 
 .color-key .key-swatch {
@@ -352,7 +355,10 @@ button[type="submit"]:hover {
 }
 
 .color-key .key-amount {
-  margin-left: auto;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
   color: #e6eef2;
   font-weight: 700;
 }

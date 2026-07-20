@@ -154,24 +154,6 @@
     <button type="submit">Save</button>
   </form>
 
-  <!-- ITEMS (LEDGER STYLE) -->
-  <div class="ledger">
-
-    {% if category["items"] %}
-
-      {% for item in category["items"] %}
-        <div class="ledger-row">
-          <span class="ledger-name">{{ item.name }}</span>
-          <span class="ledger-price">${{ '%.2f'|format(item.price) }}</span>
-        </div>
-      {% endfor %}
-
-    {% else %}
-      <div class="ledger-empty">No items yet</div>
-    {% endif %}
-
-  </div>
-
   <!-- ADD ITEM BUTTON -->
   <div class="ledger-footer">
 
@@ -214,6 +196,24 @@
   </form>
 
 </div>
+
+  <!-- ITEMS (LEDGER STYLE) -->
+  <div class="ledger">
+
+    {% if category["items"] %}
+
+      {% for item in category["items"] %}
+        <div class="ledger-row">
+          <span class="ledger-name">{{ item.name }}</span>
+          <span class="ledger-price">${{ '%.2f'|format(item.price) }}</span>
+        </div>
+      {% endfor %}
+
+    {% else %}
+      <div class="ledger-empty">No items yet</div>
+    {% endif %}
+
+  </div>
 
         </details>
       {% endfor %}
@@ -329,8 +329,7 @@ const palette = ['#FFB74D','#4DB6AC','#9575CD','#F06292','#81D4FA','#A1887F','#E
       const item = document.createElement('div');
       item.className = 'key-item';
       item.innerHTML = '<span class="key-swatch" style="background:' + palette[i % palette.length] + '"></span>' +
-                       '<span class="key-label">' + cat.name + '</span>' +
-                       '<span class="key-amount">$' + spent.toFixed(2) + '</span>';
+                       '<span class="key-label">' + cat.name + '</span>';
       key.appendChild(item);
     });
   }
