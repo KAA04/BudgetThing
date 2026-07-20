@@ -109,6 +109,9 @@
                 </span>
               </div>
             </div>
+            <div class="category-remaining">
+              Remaining: ${{ '%.2f'|format((category.budget - category.spent)|round(2)) }}
+            </div>
           </summary>
 
           <div class="category-body">

@@ -40,18 +40,18 @@ body {
 ========================= */
 
 .safe {
-  background: linear-gradient(180deg, #0f1a14, #121824);
-  border: 1px solid #1f3a2a;
+  background: linear-gradient(180deg, #1c3427, #121824);
+  border: 1px solid #224430;
 }
 
 .warning {
-  background: linear-gradient(180deg, #1a160c, #121824);
-  border: 1px solid #3a2f1f;
+  background: linear-gradient(180deg, #362d18, #121824);
+  border: 1px solid #4d3e27;
 }
 
 .danger {
-  background: linear-gradient(180deg, #1a0e10, #121824);
-  border: 1px solid #3a1f24;
+  background: linear-gradient(180deg, #331a1e, #121824);
+  border: 1px solid #512830;
 }
 
 /* =========================
@@ -85,6 +85,12 @@ summary::-webkit-details-marker {
 .category-amount {
   font-size: 13px;
   color: #9aa4b2;
+}
+
+.category-remaining {
+  font-size: 13px;
+  color: #cbd5e1;
+  font-weight: 700;
 }
 
 /* =========================
